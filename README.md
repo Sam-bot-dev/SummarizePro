@@ -1,5 +1,14 @@
 # 🚀 SummarizePro — AI Text & Document Summarizer (PWA)
+## On Mobile
+<p align="center">
+  <img src="assets/mobile.jpeg" alt="Mobile PWA View" width="350"/>
+</p>
 
+
+## On PC
+<p align="center">
+  <img src="assets/home.png" alt="SummarizePro Home" width="800"/>
+</p>
 SummarizePro is a full-stack AI-powered web application that summarizes text and documents using a transformer-based language model. It supports direct text input as well as file uploads (PDF, DOCX, TXT) and works on desktop and mobile as a Progressive Web App (PWA).
 
 ---
