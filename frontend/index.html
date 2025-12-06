@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SummarizePro</title>
+
+<!-- ✅ PWA -->
+<link rel="manifest" href="/static/manifest.json">
+<meta name="theme-color" content="#161811">
+
+<!-- ✅ Tailwind -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+
+<script>
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        primary: "#a6f20d",
+        "background-dark": "#161811",
+      },
+      fontFamily: {
+        display: ["Space Grotesk", "sans-serif"]
+      }
+    }
+  }
+}
+</script>
+</head>
+
+<body class="bg-background-dark font-display text-white">
+
+<div class="min-h-screen pb-32">
+
+<!-- Header -->
+<div class="flex items-center gap-2 p-4 sticky top-0 bg-background-dark">
+  <span class="material-symbols-outlined text-primary text-3xl">summarize</span>
+  <h2 class="font-bold text-lg">SummarizePro</h2>
+</div>
+
+<!-- Title -->
+<h1 class="text-2xl font-bold px-4 pt-4">Text Summarizer</h1>
+<p class="text-[#b0ba9c] px-4 pt-1">Type text or upload a file to get a summary.</p>
+
+<!-- Tabs -->
+<div class="flex px-4 py-4 gap-2">
+  <button id="textTab" class="flex-1 py-2 rounded-xl bg-primary text-black font-bold">Type Text</button>
+  <button id="fileTab" class="flex-1 py-2 rounded-xl bg-[#333928]">Upload File</button>
+</div>
+
+<!-- TEXT INPUT -->
+<div id="textSection" class="px-4">
+<textarea
+  id="inputText"
+  class="w-full rounded-xl bg-[#333928] p-4 min-h-48 text-white placeholder:text-[#b0ba9c]"
+  placeholder="Paste your text here..."
+></textarea>
+</div>
+
+<!-- FILE INPUT -->
+<div id="fileSection" class="px-4 hidden">
+  <div class="relative min-h-48 flex flex-col justify-center items-center border-2 border-dashed border-[#4d573c] rounded-xl bg-[#333928]">
+    <span class="material-symbols-outlined text-4xl text-[#b0ba9c]">upload_file</span>
+    <p class="mt-2">Tap to select a file</p>
+
+    <!-- ✅ ADD THIS -->
+    <p id="fileName" class="mt-2 text-sm text-[#b0ba9c]">
+      No file selected
+    </p>
+
+    <input id="fileInput" type="file" class="absolute inset-0 opacity-0 cursor-pointer"/>
+  </div>
+</div>
+
+
+<!-- BUTTON -->
+<div class="px-4 py-6">
+<button
+  id="summarizeBtn"
+  class="w-full h-14 bg-primary text-black rounded-xl font-bold">
+  Summarize
+</button>
+</div>
+
+<!-- OUTPUT -->
+<div class="px-4">
+<h3 class="text-xl font-bold">Summary</h3>
+<div
+  id="summaryOutput"
+  class="mt-3 bg-[#333928] rounded-xl min-h-48 p-4 text-[#b0ba9c]">
+  The summary will appear here.
+</div>
+</div>
+
+</div>
+
+<!-- ✅ SERVICE WORKER -->
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/static/sw.js");
+}
+</script>
+
+<!-- ✅ SPA LOGIC -->
+<script>
+let mode = "text";
+
+const textTab = document.getElementById("textTab");
+const fileTab = document.getElementById("fileTab");
+const textSection = document.getElementById("textSection");
+const fileSection = document.getElementById("fileSection");
+const btn = document.getElementById("summarizeBtn");
+const output = document.getElementById("summaryOutput");
+
+textTab.onclick = () => {
+  mode = "text";
+  textSection.classList.remove("hidden");
+  fileSection.classList.add("hidden");
+  textTab.classList.add("bg-primary","text-black");
+  fileTab.classList.remove("bg-primary","text-black");
+};
+
+fileTab.onclick = () => {
+  mode = "file";
+  fileSection.classList.remove("hidden");
+  textSection.classList.add("hidden");
+  fileTab.classList.add("bg-primary","text-black");
+  textTab.classList.remove("bg-primary","text-black");
+};
+
+btn.onclick = async () => {
+  output.textContent = "⏳ Processing...";
+  btn.disabled = true;
+
+  try {
+    let response;
+
+    if (mode === "text") {
+      const text = document.getElementById("inputText").value.trim();
+      if (!text) throw "No text";
+
+      response = await fetch("/summarize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text })
+      });
+
+    } else {
+      const file = document.getElementById("fileInput").files[0];
+      if (!file) throw "No file";
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      response = await fetch("/summarize-file", {
+        method: "POST",
+        body: formData
+      });
+    }
+
+    const data = await response.json();
+    output.textContent = data.summary;
+
+  } catch {
+    output.textContent = "❌ Failed to summarize.";
+  }
+
+  btn.disabled = false;
+};
+</script>
+<script>
+const fileInput = document.getElementById("fileInput");
+const fileName = document.getElementById("fileName");
+
+fileInput.addEventListener("change", () => {
+  if (fileInput.files.length > 0) {
+    fileName.textContent = "Selected: " + fileInput.files[0].name;
+  } else {
+    fileName.textContent = "No file selected";
+  }
+});
+</script>
+
+</body>
+</html>
