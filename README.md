@@ -77,6 +77,7 @@ uvicorn main:app --host 0.0.0.0 --port 8000
 ```bash
 ngrok http 8000
 ```
+## Then access it in the mobile phone by typing the link in the phone
 
 
 
